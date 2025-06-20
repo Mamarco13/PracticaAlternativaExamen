@@ -9,33 +9,26 @@ fi
 echo "Activando entorno virtual..."
 source venv/bin/activate
 
-echo "Instalando dependencias..."
+echo "Instalando dependencias necesarias..."
 pip install --quiet numpy pandas openpyxl
 
-# Leer modo desde argumento
-# Leer modo desde argumento
-FLAG="$1"
+echo "Limpiando resultados anteriores..."
+rm -rf results_cec_batch
+mkdir -p results_cec_batch
 
-case "$FLAG" in
-    --bl)
-        echo "Modo Búsqueda Local activado (--bl)"
-        rm -rf HHOBL
-        ;;
-    --blplus)
-        echo "Modo Búsqueda Local Optimizada activado (--blplus)"
-        rm -rf HHOBLplus
-        ;;
-    *)
-        echo "Modo estándar HHO"
-        rm -rf HHO
-        FLAG=""
-        ;;
-esac
+# Ejecutar los tres modos del benchmark uno a uno
+declare -A MODOS
+MODOS=( ["--std"]="HHO" ["--bl"]="HHO + Búsqueda Local" ["--blplus"]="HHO + BL Plus" )
 
-echo "Ejecutando benchmark con batch_runner.py..."
-python3 src/batch_runner.py $FLAG
+for MODE in --std --bl --blplus
+do
+    echo "Ejecutando benchmark para ${MODOS[$MODE]}..."
+    python3 src/batch_runner.py $MODE
+done
 
-echo "Generando Excel final con generate_excel.py..."
-python3 src/generate_excel.py $FLAG
+echo "Generando Excel TacoLab combinado con todos los algoritmos..."
+python3 src/generate_excel.py
 
-echo "¡Todo completado! Revisa results_cec_batch/"
+echo ""
+echo "¡Proceso completado con éxito!"
+echo "Archivo generado: results_cec_batch/cec2017_ALL_algorithms.xlsx"
